@@ -1,8 +1,8 @@
 defmodule Discount do
   defmacro __using__(_options) do
     quote do
-      import unquote(__MODULE__)
-      Module.register_attribute(__MODULE__, :discounts, accumulate: true)
+      import unquote(__MODULE__) # This allows us to use the discount macro in the module that needs to define discounts without having to prefix it with Discount.
+      Module.register_attribute(__MODULE__, :discounts, accumulate: true) # This registers a module attribute called @discounts that will accumulate values, meaning that every time we define a discount, it will be added to the list of discounts instead of overwriting it.
       @before_compile unquote(__MODULE__) # @before_compile is a callback that allows us to inject code before the module is compiled
     end
   end
@@ -16,6 +16,14 @@ defmodule Discount do
 
         Enum.reduce(@discounts, product, fn discount, acc ->
           apply_discount_rule(acc, discount)
+          # {name, condition, action} = discount
+          # IO.puts("Checking discount: #{name}")
+          # if apply(__MODULE__, condition, [acc]) do
+          #   apply(__MODULE__, action, [acc])
+          #   IO.puts("Applied discount: #{name}")
+          # else
+          #   acc # If the condition is not met, we return the product unchanged
+          # end
         end)
       end
 
@@ -25,7 +33,7 @@ defmodule Discount do
           else
             product
           end
-        end
+      end
     end
   end
 
@@ -49,8 +57,9 @@ defmodule Discounts do
   def is_electronics?(product), do: product.category == :electronics
   def apply_5_percent_discount(product), do: Map.update!(product, :price, &(&1 * 0.95))
 
-  discount :free_shipping, :is_eligible_for_free_shipping?, :apply_free_shipping
+  # discount :free_shipping, :is_eligible_for_free_shipping?, :apply_free_shipping
   def is_eligible_for_free_shipping?(product), do: product.price > 50
   # def apply_free_shipping(product), do: Map.put(product, :shipping_cost, 0)
   def apply_free_shipping(product), do: Map.put(product, :free_shipping, true)
+
 end
